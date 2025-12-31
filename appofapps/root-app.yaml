@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/devozz32/gitops.git  # Update with your Git repository URL
     targetRevision: main # Or specify a branch/tag (e.g., main, master, v1.0.0)
-    path: apps  # Path to directory containing application definitions
+    path: applactionsets # Path to directory containing application definitions
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
