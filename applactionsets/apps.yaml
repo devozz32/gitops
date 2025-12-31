@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-applicationset
+  namespace: argocd
+spec:
+  generators:
+  - git
+    repoURL: https://github.com/devozz32/gitops.git
+    targetRevision: main
+    directories:
+      - path: microservices/*/*
+        recurse: true
+  template:
+    metadata:
+      name: '{{path[1]}}-{{path[2]}}'
+      namespace: '{{path[1]}}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://github.com/devozz32/gitops.git
+          targetRevision: main
+          path: helm
+          helm:
+            releaseName: '{{name}}'
+            valueFiles:
+              - values.yaml
+            values: |
+              {{path[1]}}/{{path[2]}}/values.yaml
+            # Optional Helm parameters (key-value pairs)
+            # parameters:
+            #   - name: "image.tag"
+            #     value: "v1.0.0"
+            # Optional: Chart version
+            # version: "0.1.0"
+            # Optional: Skip CRDs installation
+            # skipCrds: false
+            # Optional: Pass credentials to Helm
+            # passCredentials: false
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path[1]}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
