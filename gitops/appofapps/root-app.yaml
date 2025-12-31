@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/your-gitops-repo.git  # Update with your Git repository URL
+    repoURL: https://github.com/devozz32/gitops.git  # Update with your Git repository URL
     targetRevision: HEAD  # Or specify a branch/tag (e.g., main, master, v1.0.0)
     path: apps  # Path to directory containing application definitions
   destination:
