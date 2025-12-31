@@ -25,8 +25,7 @@ spec:
             releaseName: '{{name}}'
             valueFiles:
               - values.yaml
-            values: |
-              {{path[1]}}/{{path[2]}}/values.yaml
+              - ../microservices/{{path[1]}}/{{path[2]}}/values.yaml
             # Optional Helm parameters (key-value pairs)
             # parameters:
             #   - name: "image.tag"
