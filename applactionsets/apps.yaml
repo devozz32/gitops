@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       name: '{{path[1]}}-{{path[2]}}'
-      namespace: '{{path[1]}}'
+      namespace: argocd
     spec:
       project: default
       sources:
@@ -22,7 +22,7 @@ spec:
           targetRevision: main
           path: helm
           helm:
-            releaseName: '{{name}}'
+            releaseName: '{{path[1]}}-{{path[2]}}'
             valueFiles:
               - values.yaml
               - ../microservices/{{path[1]}}/{{path[2]}}/values.yaml
