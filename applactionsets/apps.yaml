@@ -5,12 +5,12 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  - git
-    repoURL: https://github.com/devozz32/gitops.git
-    targetRevision: main
-    directories:
-      - path: microservices/*/*
-        recurse: true
+    - git:
+        repoURL: https://github.com/devozz32/gitops.git
+        revision: main
+        directories:
+          - path: microservices/*/*
+            recurse: true
   template:
     metadata:
       name: '{{path[1]}}-{{path[2]}}'
