@@ -28,6 +28,9 @@ metadata:
     {{- if .Values.ingress.alb.healthCheckPath }}
     alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.alb.healthCheckPath }}
     {{- end }}
+    {{- if .Values.ingress.alb.rewrite }}
+    alb.ingress.kubernetes.io/rewrite-target: {{ .Values.ingress.alb.rewrite }}
+    {{- end }}
     {{- end }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
