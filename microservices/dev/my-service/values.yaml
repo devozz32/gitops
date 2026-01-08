@@ -35,15 +35,28 @@ secrets:
     aws:
       secretName: prod/jewlerystore/jewelry/jwt
     env:
-      JWT_SECRET_KEY: JWT_SECRET  # main.py expects JWT_SECRET_KEY environment variable
+      JWT_SECRET_KEY: JWT_SECRET
 
 # ============================================================================
-# Ingress with ALB - Disabled
+# Ingress with ALB - Creates ALB per namespace
 # ============================================================================
 ingress:
-  enabled: enabled
+  enabled: true
+  # AWS ALB configuration - ALB will be created per namespace
   alb:
-    enabled: enabled
+    enabled: true
+    # groupName: ""  # Leave empty to use default {namespace}-alb
+    scheme: internet-facing
+    targetType: ip
+    https: false
+    healthCheckPath: "/"
+  
+  # Ingress paths - configure per microservice
+  hosts:
+    - host: "*"
+      paths:
+        - path: /my-service
+          pathType: Prefix
 
 # Resources
 resources: {}
