@@ -41,9 +41,9 @@ secrets:
 # Ingress with ALB - Disabled
 # ============================================================================
 ingress:
-  enabled: false
+  enabled: enabled
   alb:
-    enabled: false
+    enabled: enabled
 
 # Resources
 resources: {}
