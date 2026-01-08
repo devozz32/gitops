@@ -49,8 +49,10 @@ ingress:
     scheme: internet-facing
     targetType: ip
     https: false
-    healthCheckPath: "/"
-    rewrite: "/"  # Rewrite /my-service to / for nginx
+    healthCheckPath: "/my-service/"
+    # Note: rewrite-target strips the matched path prefix before forwarding
+    # /my-service -> /, /my-service/ -> /, /my-service/anything -> /anything
+    rewrite: "/"
   
   # Ingress paths - configure per microservice
   # Omit host to match all hosts (ALB will use its auto-generated DNS name)
