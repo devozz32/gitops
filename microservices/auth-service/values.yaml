@@ -1,0 +1,126 @@
+
+# Basic configuration
+replicaCount: 1
+
+# AWS ECR Image Configuration
+# Temporarily using nginx to test GitOps setup
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: "1.28.1"
+  # Original ECR image (commented for testing):
+  # repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
+  # tag: "backend-v1.0.6.9"
+
+# Image pull secrets for AWS ECR
+# For ECR authentication, you have two options:
+# 1. IRSA (IAM Roles for Service Accounts) - Recommended for EKS
+#    - Ensure serviceAccount.annotations includes: eks.amazonaws.com/role-arn
+#    - No imagePullSecrets needed, leave empty: []
+# 2. Static credentials (if not using IRSA):
+#    - Create ECR secret: kubectl create secret docker-registry ecr-registry-secret \
+#        --docker-server=553817834164.dkr.ecr.us-east-1.amazonaws.com \
+#        --docker-username=AWS \
+#        --docker-password=$(aws ecr get-login-password --region us-east-1) \
+#        --namespace=dev
+#    - Then reference it here:
+imagePullSecrets: []
+# Example with ECR secret:
+# imagePullSecrets:
+#   - name: ecr-registry-secret
+
+# Service Account configuration for ECR authentication
+# For AWS ECR with IRSA (IAM Roles for Service Accounts), add IAM role annotation:
+serviceAccount:
+  create: true
+  automount: true
+  # For ECR access with IRSA, uncomment and set your IAM role ARN:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::553817834164:role/ecr-access-role
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 80  # Nginx listens on port 80 by default
+
+# ============================================================================
+# ConfigMap - Non-sensitive environment variables
+# ============================================================================
+config:
+  env:
+    PORT: "8000"  # Match Dockerfile port
+    ENVIRONMENT: "dev"
+    LOG_LEVEL: "debug"
+    API_TIMEOUT: "30s"
+
+# ============================================================================
+# External Secrets - AWS Secrets Manager
+# Configure based on your AWS Secrets Manager structure
+# ============================================================================
+secrets:
+  # JWT Secret - refreshInterval, secretStoreRef use defaults from values.yaml
+  - name: jwt
+    enabled: true
+    aws:
+      secretName: prod/jewlerystore/jewelry/jwt
+    env:
+      JWT_SECRET: JWT_SECRET
+  
+  # Example: Database secret with multiple keys (simplified)
+  # - name: database
+  #   enabled: true
+  #   aws:
+  #     secretName: prod/jewlerystore/jewelry/db
+  #   env:
+  #     DATABASE_USERNAME: username
+  #     DATABASE_PASSWORD: password
+  #     DATABASE_HOST: host
+
+# ============================================================================
+# Ingress with ALB - Creates ALB per namespace
+# ============================================================================
+ingress:
+  enabled: false
+  # AWS ALB configuration - ALB will be created per namespace
+  alb:
+    enabled: false
+    # groupName: ""  # Leave empty to use default {namespace}-alb
+    scheme: internet-facing
+    targetType: ip
+    https: false
+    healthCheckPath: "/health"
+  
+  # Ingress paths - configure per microservice
+  hosts:
+    - host: "*"
+      paths:
+        - path: /api/backend
+          pathType: Prefix
+
+# Resources
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Health Checks
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
