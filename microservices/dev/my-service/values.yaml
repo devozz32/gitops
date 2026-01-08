@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
   pullPolicy: IfNotPresent
-  tag: "auth-service-v1.0.15.19.13"
+  tag: "my-service-v-1.8.1.14"
 
 # Image pull secrets for AWS ECR
 imagePullSecrets: []
@@ -18,16 +18,14 @@ serviceAccount:
 
 service:
   type: ClusterIP
-  port: 8001
+  port: 8000
 
 # ============================================================================
 # ConfigMap - Non-sensitive environment variables
 # ============================================================================
 config:
   env:
-    PORT: "8001"
-    ENVIRONMENT: "dev"
-    LOG_LEVEL: "debug"
+    PORT: "8000"
 
 # ============================================================================
 # External Secrets - AWS Secrets Manager
@@ -54,12 +52,12 @@ resources: {}
 # Health Checks
 livenessProbe:
   httpGet:
-    path: /
+    path: /health
     port: http
 
 readinessProbe:
   httpGet:
-    path: /
+    path: /health
     port: http
 
 # Autoscaling
