@@ -1,6 +1,3 @@
-# ============================================================================
-# Backend Microservice Values for Dev Environment
-# ============================================================================
 
 # Basic configuration
 replicaCount: 1
@@ -61,17 +58,23 @@ config:
 # Configure based on your AWS Secrets Manager structure
 # ============================================================================
 secrets:
-  # JWT Secret - adjust secretName path based on your AWS Secrets Manager structure
+  # JWT Secret - refreshInterval, secretStoreRef use defaults from values.yaml
   - name: jwt
     enabled: true
-    refreshInterval: 1h
-    secretStoreRef:
-      name: aws-secrets
-      kind: ClusterSecretStore
     aws:
-      secretName: prod/jewlerystore/jewelry/jwt  # Using existing secret
+      secretName: prod/jewlerystore/jewelry/jwt
     env:
       JWT_SECRET: JWT_SECRET
+  
+  # Example: Database secret with multiple keys (simplified)
+  # - name: database
+  #   enabled: true
+  #   aws:
+  #     secretName: prod/jewlerystore/jewelry/db
+  #   env:
+  #     DATABASE_USERNAME: username
+  #     DATABASE_PASSWORD: password
+  #     DATABASE_HOST: host
 
 # ============================================================================
 # Ingress with ALB - Creates ALB per namespace

@@ -73,6 +73,13 @@ config:
   #   ENVIRONMENT: "production"
 
 # External Secrets configuration for AWS Secrets Manager integration
+# Default values for all secrets (can be overridden per secret)
+secretsDefaults:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets
+    kind: ClusterSecretStore
+
 secrets: []
   # Example:
   # - name: jwt
