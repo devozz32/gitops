@@ -1,0 +1,104 @@
+# ============================================================================
+# Microservice Example values.yaml
+# Use this as a template for your microservices in microservices/{env}/{service}/values.yaml
+# ============================================================================
+
+# Basic configuration
+replicaCount: 2
+
+image:
+  # AWS ECR - Your actual ECR repository
+  repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
+  pullPolicy: IfNotPresent
+  # Image tag: backend-v1.0.6.9
+  # Full image: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store:backend-v1.0.6.9
+  tag: "backend-v1.0.6.9"
+  # For other registries, use format: repository: myregistry/backend-service
+
+# Image pull secrets for private registries (AWS ECR)
+# For AWS ECR authentication, you have two options:
+# 1. IRSA (IAM Roles for Service Accounts) - Recommended for EKS
+#    - Ensure serviceAccount.annotations includes: eks.amazonaws.com/role-arn
+#    - No imagePullSecrets needed, leave empty: []
+# 2. Static credentials (if not using IRSA):
+#    - Create ECR secret: kubectl create secret docker-registry ecr-registry-secret \
+#        --docker-server=553817834164.dkr.ecr.us-east-1.amazonaws.com \
+#        --docker-username=AWS \
+#        --docker-password=$(aws ecr get-login-password --region us-east-1) \
+#        --namespace=<your-namespace>
+#    - Then reference it here:
+imagePullSecrets: []
+# Example with ECR secret:
+# imagePullSecrets:
+#   - name: ecr-registry-secret
+
+# Service Account configuration for ECR authentication
+# For AWS ECR with IRSA (IAM Roles for Service Accounts), add IAM role annotation:
+serviceAccount:
+  create: true
+  automount: true
+  # For ECR access with IRSA, uncomment and set your IAM role ARN:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::553817834164:role/ecr-access-role
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# ============================================================================
+# ConfigMap - Non-sensitive environment variables
+# ============================================================================
+config:
+  env:
+    PORT: "8080"
+    ENVIRONMENT: "dev"  # Change to "staging" or "prod" per environment
+    LOG_LEVEL: "debug"
+    API_TIMEOUT: "30s"
+
+# ============================================================================
+# External Secrets - AWS Secrets Manager
+# Configure based on your AWS Secrets Manager structure
+# ============================================================================
+secrets:
+  # JWT Secret - adjust secretName path based on your AWS Secrets Manager structure
+  - name: jwt
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets
+      kind: ClusterSecretStore
+    aws:
+      secretName: dev/backend/jwt  # Format: {env}/{service}/{secret-name}
+    env:
+      JWT_SECRET: JWT_SECRET
+
+
+# ============================================================================
+# Ingress with ALB - Creates ALB per namespace
+# ============================================================================
+ingress:
+  enabled: true
+  
+  # AWS ALB configuration - ALB will be created per namespace
+  alb:
+    enabled: true
+    # groupName: ""  # Leave empty to use default {namespace}-alb
+    scheme: internet-facing
+    targetType: ip
+    https: false
+    healthCheckPath: "/health"
+  
+  # Ingress paths - configure per microservice
+  # Note: Without custom domain, ALB will use its auto-generated DNS name
+  hosts:
+    - host: "*"  # ALB will use its own DNS name (e.g., k8s-xxxxx-xxxxx.us-east-1.elb.amazonaws.com)
+      paths:
+        - path: /api/backend  # Microservice-specific path
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 85

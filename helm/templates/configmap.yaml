@@ -1,0 +1,13 @@
+{{- if .Values.config.env }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "helm.fullname" . }}-config
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+data:
+{{- range $key, $value := .Values.config.env }}
+  {{ $key }}: "{{ $value }}"
+{{- end }}
+{{- end }}
+

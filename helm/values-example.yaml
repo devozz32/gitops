@@ -1,0 +1,274 @@
+# ============================================================================
+# Complete Example values.yaml for Helm Chart
+# This demonstrates all features: External Secrets, ConfigMap, ALB Ingress
+# ============================================================================
+
+# Replica count
+replicaCount: 3
+
+# Container image configuration
+image:
+  repository: myregistry/myapp
+  pullPolicy: IfNotPresent
+  tag: "v1.2.3"
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+# Example:
+# imagePullSecrets:
+#   - name: registry-secret
+
+# Override chart name
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account configuration
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Pod annotations and labels
+podAnnotations: {}
+podLabels: {}
+
+# Security contexts
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+
+# ============================================================================
+# ConfigMap - Non-sensitive environment variables
+# ============================================================================
+config:
+  env:
+    PORT: "8080"
+    ENVIRONMENT: "production"
+    LOG_LEVEL: "info"
+    API_TIMEOUT: "30s"
+    # Add any non-sensitive environment variables here
+
+# ============================================================================
+# External Secrets - AWS Secrets Manager integration
+# ============================================================================
+secrets:
+  # JWT Secret example
+  - name: jwt-secret
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets
+      kind: ClusterSecretStore
+    aws:
+      secretName: prod/myapp/jwt
+    env:
+      JWT_SECRET: JWT_SECRET
+      JWT_EXPIRY: JWT_EXPIRY
+
+  # Database credentials example
+  - name: database-secret
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets
+      kind: ClusterSecretStore
+    aws:
+      secretName: prod/myapp/database
+    env:
+      DATABASE_USERNAME: username
+      DATABASE_PASSWORD: password
+      DATABASE_HOST: host
+      DATABASE_PORT: port
+
+  # API Keys example
+  - name: api-keys-secret
+    enabled: true
+    refreshInterval: 2h
+    secretStoreRef:
+      name: aws-secrets
+      kind: ClusterSecretStore
+    aws:
+      secretName: prod/myapp/api-keys
+    env:
+      STRIPE_API_KEY: STRIPE_API_KEY
+      SENDGRID_API_KEY: SENDGRID_API_KEY
+
+# ============================================================================
+# Ingress Configuration with AWS ALB
+# ============================================================================
+ingress:
+  enabled: true
+  className: ""
+  
+  # Additional annotations (optional)
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+
+  # AWS ALB Ingress Controller configuration
+  # This creates an ALB per namespace when enabled
+  alb:
+    enabled: true
+    
+    # Group name - all ingresses with same group name share the same ALB
+    # If not set, defaults to {namespace}-alb (e.g., "dev-alb", "prod-alb")
+    # This ensures each namespace gets its own ALB
+    groupName: ""  # Will default to {namespace}-alb
+    
+    # Scheme: internet-facing or internal
+    scheme: internet-facing
+    
+    # Target type: ip (for Fargate/IP targets) or instance (for EC2)
+    targetType: ip
+    
+    # Enable HTTPS listener
+    https: true
+    
+    # SSL Policy (AWS managed policy)
+    sslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+    
+    # Certificate ARN from AWS Certificate Manager (required for HTTPS)
+    certificateArn: "arn:aws:acm:us-east-1:123456789012:certificate/abc123-def456"
+    
+    # Health check path
+    healthCheckPath: "/health"
+    
+    # Custom load balancer name (optional, defaults to {namespace}-alb)
+    loadBalancerName: ""
+
+  # Ingress hosts and paths - configurable per microservice
+  hosts:
+    # Example 1: Single host with multiple paths
+    - host: api.example.com
+      paths:
+        - path: /api/v1
+          pathType: Prefix
+        - path: /api/v2
+          pathType: Prefix
+        - path: /health
+          pathType: Exact
+    
+    # Example 2: Multiple hosts
+    - host: www.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+    
+    # Example 3: Microservice-specific path
+    - host: backend.example.com
+      paths:
+        - path: /backend
+          pathType: Prefix
+
+  # TLS configuration (if not using ALB certificate)
+  tls: []
+  # Example:
+  # tls:
+  #   - secretName: example-tls
+  #     hosts:
+  #       - api.example.com
+
+# ============================================================================
+# Resources - CPU and Memory limits/requests
+# ============================================================================
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# ============================================================================
+# Health Checks - Liveness and Readiness Probes
+# ============================================================================
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ============================================================================
+# Autoscaling - Horizontal Pod Autoscaler
+# ============================================================================
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# ============================================================================
+# Volumes and Volume Mounts
+# ============================================================================
+volumes: []
+# Example:
+# volumes:
+#   - name: config-volume
+#     configMap:
+#       name: app-config
+
+volumeMounts: []
+# Example:
+# volumeMounts:
+#   - name: config-volume
+#     mountPath: "/etc/config"
+#     readOnly: true
+
+# ============================================================================
+# Node Selector, Tolerations, and Affinity
+# ============================================================================
+nodeSelector: {}
+# Example:
+# nodeSelector:
+#   kubernetes.io/os: linux
+#   node-type: compute
+
+tolerations: []
+# Example:
+# tolerations:
+#   - key: "dedicated"
+#     operator: "Equal"
+#     value: "app"
+#     effect: "NoSchedule"
+
+affinity: {}
+# Example:
+# affinity:
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#       - weight: 100
+#         podAffinityTerm:
+#           labelSelector:
+#             matchExpressions:
+#               - key: app
+#                 operator: In
+#                 values:
+#                   - myapp
+#           topologyKey: kubernetes.io/hostname
+

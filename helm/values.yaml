@@ -7,6 +7,9 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
+  # For AWS ECR, use the full ECR repository URL:
+  # repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
+  # For Docker Hub or other registries, use: repository/image-name
   repository: nginx
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
@@ -14,6 +17,11 @@ image:
   tag: ""
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# For AWS ECR, you can use IRSA (IAM Roles for Service Accounts) or create a secret with ECR credentials
+# If using IRSA, ensure your serviceAccount has the proper IAM role annotation and imagePullSecrets can be empty
+# If using static credentials, create a secret and reference it here:
+# imagePullSecrets:
+#   - name: ecr-registry-secret
 imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
@@ -56,6 +64,35 @@ service:
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 80
 
+# ConfigMap configuration for environment variables
+config:
+  env: {}
+  # Example:
+  # env:
+  #   PORT: "8080"
+  #   ENVIRONMENT: "production"
+
+# External Secrets configuration for AWS Secrets Manager integration
+secrets: []
+  # Example:
+  # - name: jwt
+  #   enabled: true
+  #   refreshInterval: 1h
+  #   secretStoreRef:
+  #     name: aws-secrets
+  #     kind: ClusterSecretStore
+  #   aws:
+  #     secretName: prod/jewlerystore/jewelry/jwt
+  #   env:
+  #     JWT_SECRET: JWT_SECRET
+  # - name: database
+  #   enabled: true
+  #   aws:
+  #     secretName: prod/jewlerystore/jewelry/db
+  #   env:
+  #     DATABASE_USERNAME: username
+  #     DATABASE_PASSWORD: password
+
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: false
@@ -63,11 +100,44 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
+  
+  # AWS ALB Ingress Controller configuration
+  # This creates an ALB per namespace when enabled
+  alb:
+    enabled: false
+    # Group name for ALB - if not set, defaults to {namespace}-alb
+    # All ingresses with the same group name will share the same ALB
+    groupName: ""
+    # Scheme: internet-facing or internal
+    scheme: internet-facing
+    # Target type: ip or instance
+    targetType: ip
+    # Enable HTTPS listener
+    https: false
+    # SSL Policy (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)
+    sslPolicy: ""
+    # Certificate ARN for HTTPS
+    certificateArn: ""
+    # Health check path
+    healthCheckPath: "/"
+    # Custom load balancer name (defaults to {namespace}-alb)
+    loadBalancerName: ""
+  
+  # Ingress hosts and paths - configurable per microservice
   hosts:
     - host: chart-example.local
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
+  # Example for microservice-specific paths:
+  # hosts:
+  #   - host: api.example.com
+  #     paths:
+  #       - path: /api/v1
+  #         pathType: Prefix
+  #       - path: /api/v2
+  #         pathType: Prefix
+  
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
