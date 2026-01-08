@@ -1,22 +1,20 @@
 # ============================================================================
-# Microservice Example values.yaml
-# Use this as a template for your microservices in microservices/{env}/{service}/values.yaml
+# Backend Microservice Values for Dev Environment
 # ============================================================================
 
 # Basic configuration
-replicaCount: 2
+replicaCount: 1
 
+# AWS ECR Image Configuration
 image:
-  # AWS ECR - Your actual ECR repository
+  # ECR repository: luxe-jewelry-store
   repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
   pullPolicy: IfNotPresent
   # Image tag: backend-v1.0.6.9
-  # Full image: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store:backend-v1.0.6.9
   tag: "backend-v1.0.6.9"
-  # For other registries, use format: repository: myregistry/backend-service
 
-# Image pull secrets for private registries (AWS ECR)
-# For AWS ECR authentication, you have two options:
+# Image pull secrets for AWS ECR
+# For ECR authentication, you have two options:
 # 1. IRSA (IAM Roles for Service Accounts) - Recommended for EKS
 #    - Ensure serviceAccount.annotations includes: eks.amazonaws.com/role-arn
 #    - No imagePullSecrets needed, leave empty: []
@@ -25,7 +23,7 @@ image:
 #        --docker-server=553817834164.dkr.ecr.us-east-1.amazonaws.com \
 #        --docker-username=AWS \
 #        --docker-password=$(aws ecr get-login-password --region us-east-1) \
-#        --namespace=<your-namespace>
+#        --namespace=dev
 #    - Then reference it here:
 imagePullSecrets: []
 # Example with ECR secret:
@@ -52,7 +50,7 @@ service:
 config:
   env:
     PORT: "8080"
-    ENVIRONMENT: "dev"  # Change to "staging" or "prod" per environment
+    ENVIRONMENT: "dev"
     LOG_LEVEL: "debug"
     API_TIMEOUT: "30s"
 
@@ -73,16 +71,14 @@ secrets:
     env:
       JWT_SECRET: JWT_SECRET
 
-
 # ============================================================================
 # Ingress with ALB - Creates ALB per namespace
 # ============================================================================
 ingress:
-  enabled: true
-  
+  enabled: false
   # AWS ALB configuration - ALB will be created per namespace
   alb:
-    enabled: true
+    enabled: false
     # groupName: ""  # Leave empty to use default {namespace}-alb
     scheme: internet-facing
     targetType: ip
@@ -90,15 +86,36 @@ ingress:
     healthCheckPath: "/health"
   
   # Ingress paths - configure per microservice
-  # Note: Without custom domain, ALB will use its auto-generated DNS name
   hosts:
-    - host: "*"  # ALB will use its own DNS name (e.g., k8s-xxxxx-xxxxx.us-east-1.elb.amazonaws.com)
+    - host: "*"
       paths:
-        - path: /api/backend  # Microservice-specific path
+        - path: /api/backend
           pathType: Prefix
 
+# Resources
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Health Checks
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# Autoscaling
 autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 85
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
