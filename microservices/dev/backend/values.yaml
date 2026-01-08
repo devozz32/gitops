@@ -42,14 +42,14 @@ serviceAccount:
 
 service:
   type: ClusterIP
-  port: 8080
+  port: 8000  # Match Dockerfile EXPOSE 8000
 
 # ============================================================================
 # ConfigMap - Non-sensitive environment variables
 # ============================================================================
 config:
   env:
-    PORT: "8080"
+    PORT: "8000"  # Match Dockerfile port
     ENVIRONMENT: "dev"
     LOG_LEVEL: "debug"
     API_TIMEOUT: "30s"
