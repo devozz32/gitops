@@ -6,12 +6,14 @@
 replicaCount: 1
 
 # AWS ECR Image Configuration
+# Temporarily using nginx to test GitOps setup
 image:
-  # ECR repository: luxe-jewelry-store
-  repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
+  repository: nginx
   pullPolicy: IfNotPresent
-  # Image tag: backend-v1.0.6.9
-  tag: "backend-v1.0.6.9"
+  tag: "1.28.1"
+  # Original ECR image (commented for testing):
+  # repository: 553817834164.dkr.ecr.us-east-1.amazonaws.com/luxe-jewelry-store
+  # tag: "backend-v1.0.6.9"
 
 # Image pull secrets for AWS ECR
 # For ECR authentication, you have two options:
