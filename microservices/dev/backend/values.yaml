@@ -67,7 +67,7 @@ secrets:
       name: aws-secrets
       kind: ClusterSecretStore
     aws:
-      secretName: dev/backend/jwt  # Format: {env}/{service}/{secret-name}
+      secretName: prod/jewlerystore/jewelry/jwt  # Using existing secret
     env:
       JWT_SECRET: JWT_SECRET
 
